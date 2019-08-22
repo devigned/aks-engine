@@ -68,6 +68,8 @@ const (
 	AvailabilitySet = "AvailabilitySet"
 	// VirtualMachineScaleSets means that the vms are in a virtual machine scaleset
 	VirtualMachineScaleSets = "VirtualMachineScaleSets"
+	// DedicatedHosts means that the vms will run on dedicated hosts (https://docs.microsoft.com/en-us/azure/virtual-machines/windows/dedicated-hosts)
+	DedicatedHosts = "DedicatedHosts"
 )
 
 // storage profiles

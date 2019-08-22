@@ -2610,7 +2610,17 @@ func TestAgentPoolProfile_ValidateAvailabilityProfile(t *testing.T) {
 		}
 	})
 
-	t.Run("Should fail for AvailabilitySet + SinglePlacementGroup true", func(t *testing.T) {
+	t.Run("Should pass for DedicatedHosts availability profile", func(t *testing.T) {
+		t.Parallel()
+		cs := getK8sDefaultContainerService(false)
+		agentPoolProfiles := cs.Properties.AgentPoolProfiles
+		agentPoolProfiles[0].AvailabilityProfile = "DedicatedHosts"
+		if err := cs.Properties.validateAgentPoolProfiles(true); err != nil {
+			t.Error("DedicatedHosts is an allowed availability profile type")
+		}
+	})
+
+	t.Run("Should fail for [AvailabilitySet|DedicatedHosts] + SinglePlacementGroup true", func(t *testing.T) {
 		t.Parallel()
 		cs := getK8sDefaultContainerService(false)
 		agentPoolProfiles := cs.Properties.AgentPoolProfiles
@@ -2619,14 +2629,24 @@ func TestAgentPoolProfile_ValidateAvailabilityProfile(t *testing.T) {
 		if err := cs.Properties.validateAgentPoolProfiles(true); err.Error() != expectedMsg {
 			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 		}
+
+		agentPoolProfiles[0].AvailabilityProfile = DedicatedHosts
+		if err := cs.Properties.validateAgentPoolProfiles(true); err.Error() != expectedMsg {
+			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
+		}
 	})
 
-	t.Run("Should fail for AvailabilitySet + SinglePlacementGroup false", func(t *testing.T) {
+	t.Run("Should fail for [AvailabilitySet|DedicatedHosts] + SinglePlacementGroup false", func(t *testing.T) {
 		t.Parallel()
 		cs := getK8sDefaultContainerService(false)
 		agentPoolProfiles := cs.Properties.AgentPoolProfiles
 		agentPoolProfiles[0].SinglePlacementGroup = to.BoolPtr(false)
 		expectedMsg := fmt.Sprintf("singlePlacementGroup is only supported with VirtualMachineScaleSets")
+		if err := cs.Properties.validateAgentPoolProfiles(true); err.Error() != expectedMsg {
+			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
+		}
+
+		agentPoolProfiles[0].AvailabilityProfile = DedicatedHosts
 		if err := cs.Properties.validateAgentPoolProfiles(true); err.Error() != expectedMsg {
 			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 		}

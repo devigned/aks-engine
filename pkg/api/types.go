@@ -1264,6 +1264,11 @@ func (m *MasterProfile) IsVHDDistro() bool {
 	return m.Distro == AKSUbuntu1604 || m.Distro == AKSUbuntu1804
 }
 
+// IsVirtualMachineScaleSets returns true if the master availability profile is DedicatedHosts
+func (m *MasterProfile) IsDedicatedHosts() bool {
+	return m.AvailabilityProfile == DedicatedHosts
+}
+
 // IsVirtualMachineScaleSets returns true if the master availability profile is VMSS
 func (m *MasterProfile) IsVirtualMachineScaleSets() bool {
 	return m.AvailabilityProfile == VirtualMachineScaleSets
@@ -1393,9 +1398,14 @@ func (a *AgentPoolProfile) IsVHDDistro() bool {
 	return a.Distro == AKSUbuntu1604 || a.Distro == AKSUbuntu1804
 }
 
-// IsAvailabilitySets returns true if the customer specified disks
+// IsAvailabilitySets returns true if the agent pool availability profile is AvailabilitySets
 func (a *AgentPoolProfile) IsAvailabilitySets() bool {
 	return a.AvailabilityProfile == AvailabilitySet
+}
+
+// IsDedicatedHosts returns true if the agent pool availability profile is DedicatedHosts
+func (a *AgentPoolProfile) IsDedicatedHosts() bool {
+	return a.AvailabilityProfile == DedicatedHosts
 }
 
 // IsVirtualMachineScaleSets returns true if the agent pool availability profile is VMSS

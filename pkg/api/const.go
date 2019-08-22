@@ -70,6 +70,13 @@ const (
 const (
 	// AvailabilitySet means that the vms are in an availability set
 	AvailabilitySet = "AvailabilitySet"
+	// VirtualMachineScaleSets means that the vms are in a virtual machine scaleset
+	VirtualMachineScaleSets = "VirtualMachineScaleSets"
+	// DedicatedHosts means that the vms will run on dedicated hosts (https://docs.microsoft.com/en-us/azure/virtual-machines/windows/dedicated-hosts)
+	DedicatedHosts = "DedicatedHosts"
+)
+
+const (
 	// DefaultOrchestratorName specifies the 3 character orchestrator code of the cluster template and affects resource naming.
 	DefaultOrchestratorName = "k8s"
 	// DefaultHostedProfileMasterName specifies the 3 character orchestrator code of the clusters with hosted master profiles.
@@ -92,8 +99,6 @@ const (
 	DefaultVnetResourceGroupSegmentIndex = 4
 	// DefaultVnetNameResourceSegmentIndex specifies the default virtual network name segment index.
 	DefaultVnetNameResourceSegmentIndex = 8
-	// VirtualMachineScaleSets means that the vms are in a virtual machine scaleset
-	VirtualMachineScaleSets = "VirtualMachineScaleSets"
 	// ScaleSetPriorityRegular is the default ScaleSet Priority
 	ScaleSetPriorityRegular = "Regular"
 	// ScaleSetPriorityLow means the ScaleSet will use Low-priority VMs

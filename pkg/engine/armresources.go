@@ -157,3 +157,7 @@ func createKubernetesAgentVMASResources(cs *api.ContainerService, profile *api.A
 
 	return agentVMASResources
 }
+
+func createKubernetesAgentDedicatedHostResources(cs *api.ContainerService, profile *api.AgentPoolProfile) []interface{} {
+	return nil
+}
