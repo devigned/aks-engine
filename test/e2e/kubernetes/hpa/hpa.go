@@ -11,8 +11,10 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/Azure/aks-engine/test/e2e/kubernetes/util"
 	"github.com/pkg/errors"
+
+	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/aks-engine/test/e2e/kubernetes/util"
 )
 
 const commandTimeout = 1 * time.Minute
@@ -192,4 +194,45 @@ func WaitOnDeleted(hpaPrefix, namespace string, sleep, timeout time.Duration) (b
 			return false, errors.Errorf("WaitOnDeleted timed out: %s\n", mostRecentWaitOnDeletedError)
 		}
 	}
+}
+
+// WaitOnDeleted returns when an hpa resource is successfully deleted
+func WaitOnDeleted2(hpaPrefix, namespace string, sleep, timeout time.Duration) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	job := helpers.NewRetryJob(sleep, timeout)
+	job.Do(ctx, func(ctx context.Context, state *helpers.JobState) {
+		allResult := GetAllByPrefixAsync(hpaPrefix, namespace)
+
+		if allResult.err == nil {
+			if len(allResult.hpas) == 0 {
+				state.Done = true
+				state.Values["result"] = true
+			}
+		}
+
+		state.Values["response"] = allResult
+	})
+	<-job.Done()
+
+	if job.State.Values["result"] == true {
+		return true, nil
+	}
+
+	if job.State.Values["response"] == nil {
+		return false, errors.Errorf("WaitOnDeleted timed out with no response set")
+	}
+
+	if res, ok := job.State.Values["response"].(GetAllByPrefixResult); ok {
+		for _, hpa := range res.hpas {
+			err := hpa.Describe()
+			if err != nil {
+				log.Printf("Unable to describe hpa %s: %s", hpa.Metadata.Name, err)
+			}
+		}
+		return false, errors.Errorf("WaitOnDeleted timed out: %s\n", res.err)
+	}
+
+	return false, errors.Errorf("WaitOnDeleted timed out with a response which was not the type we expected")
 }
