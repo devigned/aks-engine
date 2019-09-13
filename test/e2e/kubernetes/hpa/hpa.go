@@ -198,10 +198,13 @@ func WaitOnDeleted(hpaPrefix, namespace string, sleep, timeout time.Duration) (b
 
 // WaitOnDeleted returns when an hpa resource is successfully deleted
 func WaitOnDeleted2(hpaPrefix, namespace string, sleep, timeout time.Duration) (bool, error) {
-	job := helpers.NewRetryJob(sleep, timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	job := helpers.NewRetryJob(sleep)
 	var success bool
 	var res *GetAllByPrefixResult
-	job.Do(context.Background(), func(ctx context.Context) (done bool, err error) {
+	job.Do(ctx, func(ctx context.Context) (done bool, err error) {
 		allResult := GetAllByPrefixAsync(hpaPrefix, namespace)
 
 		if allResult.err == nil {

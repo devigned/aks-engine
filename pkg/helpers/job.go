@@ -9,7 +9,6 @@ import (
 type (
 	RetryJob struct {
 		sleep   time.Duration
-		timeout time.Duration
 		once    sync.Once
 		done    chan struct{}
 		Err     error
@@ -18,18 +17,15 @@ type (
 	WorkFunc func(ctx context.Context) (done bool, err error)
 )
 
-func NewRetryJob(sleep, timeout time.Duration) *RetryJob {
+func NewRetryJob(sleep time.Duration) *RetryJob {
 	return &RetryJob{
 		sleep:   sleep,
-		timeout: timeout,
 		done: make(chan struct{}),
 	}
 }
 
 func (rj *RetryJob) Do(ctx context.Context, work WorkFunc) {
-	ctx, cancel := context.WithTimeout(ctx, rj.timeout)
 	go func() {
-		defer cancel()
 		for {
 			select {
 			case <-ctx.Done():

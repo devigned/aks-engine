@@ -31,8 +31,8 @@ func TestRetryJob_Do(t *testing.T) {
 }
 
 func TestRetryJob_DoCancel(t *testing.T) {
-	job := helpers.NewRetryJob(1*time.Second, 50*time.Second)
-	ctx, cancel := context.WithCancel(context.Background())
+	job := helpers.NewRetryJob(1*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Second)
 	defer cancel()
 
 	job.Do(ctx, func(ctx context.Context) (done bool, err error) {
@@ -52,9 +52,12 @@ func TestRetryJob_DoCancel(t *testing.T) {
 }
 
 func TestRetryJob_DoManyTimes(t *testing.T) {
-	job := helpers.NewRetryJob(25*time.Millisecond, 1*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+
+	job := helpers.NewRetryJob(25*time.Millisecond)
 	count := 0
-	job.Do(context.Background(), func(ctx context.Context) (done bool, err error) {
+	job.Do(ctx, func(ctx context.Context) (done bool, err error) {
 		count = count + 1
 		return false, nil
 	})
@@ -66,9 +69,12 @@ func TestRetryJob_DoManyTimes(t *testing.T) {
 }
 
 func TestRetryJob_DoOnce(t *testing.T) {
-	job := helpers.NewRetryJob(25*time.Millisecond, 1*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+
+	job := helpers.NewRetryJob(25*time.Millisecond)
 	count := 0
-	job.Do(context.Background(), func(ctx context.Context) (done bool, err error) {
+	job.Do(ctx, func(ctx context.Context) (done bool, err error) {
 		count = count + 1
 		return true, nil
 	})
