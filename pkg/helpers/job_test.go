@@ -10,33 +10,23 @@ import (
 
 func TestNewRetryJob(t *testing.T) {
 	job := helpers.NewRetryJob(1*time.Second, 30*time.Second)
-	if job.State.Values == nil {
-		t.Error("job state should be initialized")
-	}
 
-	if job.State.Done == true {
-		t.Error("job state should not be done")
-	}
-
-	if job.State.Err != nil {
+	if job.Err != nil {
 		t.Error("job state should not have an error set")
 	}
 }
 
 func TestRetryJob_Do(t *testing.T) {
 	job := helpers.NewRetryJob(1*time.Second, 1*time.Second)
-	job.Do(context.Background(), func(ctx context.Context, state *helpers.JobState) {
-		state.Done = true
-		state.Values["foo"] = "bar"
+	var strVal string
+	job.Do(context.Background(), func(ctx context.Context) (done bool, err error) {
+		strVal = "bar"
+		return true, nil
 	})
 	<-job.Done()
 
-	if job.State.Done != true {
-		t.Error("job should be done")
-	}
-
-	if job.State.Values["foo"] != "bar" {
-		t.Error("job should have Value['foo'] = 'bar'")
+	if strVal != "bar" {
+		t.Error("job should have 'bar'")
 	}
 }
 
@@ -45,8 +35,9 @@ func TestRetryJob_DoCancel(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	job.Do(ctx, func(ctx context.Context, state *helpers.JobState) {
-		<- ctx.Done()
+	job.Do(ctx, func(ctx context.Context) (done bool, err error) {
+		<-ctx.Done()
+		return false, nil
 	})
 
 	go func() {
@@ -54,28 +45,36 @@ func TestRetryJob_DoCancel(t *testing.T) {
 		cancel()
 	}()
 
-	<- job.Done()
-	if job.State.Err != context.Canceled {
+	<-job.Done()
+	if job.Err != context.Canceled {
 		t.Error("job should error with context canceled")
 	}
 }
 
 func TestRetryJob_DoManyTimes(t *testing.T) {
 	job := helpers.NewRetryJob(25*time.Millisecond, 1*time.Second)
-	job.Do(context.Background(), func(ctx context.Context, state *helpers.JobState) {
-		if state.Values["count"] == nil {
-			state.Values["count"] = 1
-			return
-		}
-
-		if count, ok := state.Values["count"].(int); ok {
-			state.Values["count"] = count + 1
-		}
+	count := 0
+	job.Do(context.Background(), func(ctx context.Context) (done bool, err error) {
+		count = count + 1
+		return false, nil
 	})
 
-	<- job.Done()
-	count, _ := job.State.Values["count"].(int)
+	<-job.Done()
 	if count <= 30 {
 		t.Errorf("Expected a count greater than 30, but got a count of %d\n", count)
+	}
+}
+
+func TestRetryJob_DoOnce(t *testing.T) {
+	job := helpers.NewRetryJob(25*time.Millisecond, 1*time.Second)
+	count := 0
+	job.Do(context.Background(), func(ctx context.Context) (done bool, err error) {
+		count = count + 1
+		return true, nil
+	})
+
+	<-job.Done()
+	if count != 1 {
+		t.Error("count should only be incremented once")
 	}
 }
