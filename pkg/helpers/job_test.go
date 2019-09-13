@@ -9,7 +9,7 @@ import (
 )
 
 func TestNewRetryJob(t *testing.T) {
-	job := helpers.NewRetryJob(1*time.Second, 30*time.Second)
+	job := helpers.NewRetryJob(1*time.Second)
 
 	if job.Err != nil {
 		t.Error("job state should not have an error set")
@@ -17,7 +17,11 @@ func TestNewRetryJob(t *testing.T) {
 }
 
 func TestRetryJob_Do(t *testing.T) {
-	job := helpers.NewRetryJob(1*time.Second, 1*time.Second)
+	job := helpers.NewRetryJob(1*time.Second)
+
+	_, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+
 	var strVal string
 	job.Do(context.Background(), func(ctx context.Context) (done bool, err error) {
 		strVal = "bar"
