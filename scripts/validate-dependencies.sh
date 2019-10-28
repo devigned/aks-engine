@@ -8,8 +8,9 @@ exit_code=0
 echo "==> Running go mod check <=="
 
 go mod tidy
+go mod vendor
 
-git diff --exit-code --quiet go.mod go.sum
+git diff --exit-code --quiet go.mod go.sum vendor
 error_code=$?
 
 if [ $error_code -ne 0 ]; then
